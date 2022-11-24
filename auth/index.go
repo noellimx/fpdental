@@ -46,11 +46,6 @@ func (a *Auth) CountCredentials() int {
 func (a *Auth) GetCredentials(name string) *UserCredential {
 	log.Printf("%d", a.CountCredentials())
 
-	for _, c := range a.UserCredentials {
-		log.Printf("creds checking %s%s", c.username, c.password)
-
-	}
-
 	return a.UserCredentials[name]
 }
 

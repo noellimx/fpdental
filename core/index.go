@@ -1,9 +1,11 @@
 package core
 
 import (
+	"encoding/json"
 	"fpdental/appointment"
 	"fpdental/auth"
 	"fpdental/user"
+	"fpdental/utils"
 	"log"
 
 	"github.com/google/uuid"
@@ -142,4 +144,38 @@ func (w *World) SignUp(username, password string) error {
 		return err
 	}
 	return nil
+}
+
+func (w *World) GetUserAppointments(username string) (*appointment.Appointments, error) {
+
+	p := w.PatientOrReceptionists[username]
+
+	log.Printf("%d", w.PatientOrReceptionists[username].Count())
+	if p == nil {
+
+		return nil, utils.ErrorTODO
+
+	}
+
+	return p.Appointments, nil
+
+}
+
+func (w *World) GetUserAppointmentsJSONByte(username string) ([]byte, error) {
+
+	ps, err := w.GetUserAppointments(username)
+
+	if err != nil {
+		return nil, err
+	}
+
+	appsByte, err := json.Marshal(ps.AsArray())
+
+	if err != nil {
+
+		return nil, err
+	}
+
+	return appsByte, nil
+
 }

@@ -42,3 +42,16 @@ func TestSignUp(t *testing.T) {
 	}
 
 }
+
+func TestGetUserAppointmentsJSONBye(t *testing.T) {
+
+	w = Init(wo)
+
+	got, err := w.GetUserAppointmentsJSONByte("u2")
+
+	assert.Equal(t, []byte(`[{"Id":"d557c96c-ae2e-40a1-bc45-bd1b05e52f46","description":"a1"},{"Id":"652d5ac0-dc0f-4763-9b06-4c67bcacf6da","description":"a2"}]`), got, "a")
+
+	if err != nil {
+		t.Fatalf("json data mismatch")
+	}
+}

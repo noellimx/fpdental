@@ -35,6 +35,17 @@ func (ap *Appointment) idString() string {
 	return ap.Id.String()
 }
 
+func (aps *Appointments) AsArray() []*Appointment {
+
+	arr := []*Appointment{}
+
+	for _, a := range aps.m {
+
+		arr = append(arr, a)
+	}
+	return arr
+}
+
 func newAppointment() *Appointment {
 	return &Appointment{Id: uuid.New()}
 }
