@@ -24,9 +24,14 @@ func (u *UserCredential) isAuthByPassword(attempt PasswordUnhashed) bool {
 	return pw == u.password
 }
 
-type UserCredentialInsecure struct {
+type UserCredentialClear struct {
 	Password PasswordUnhashed `json:"password"`
 	Username string           `json:"username"`
+}
+
+func NewUserCredentialClear(username, password string) *UserCredentialClear {
+
+	return &UserCredentialClear{Username: username, Password: PasswordUnhashed(password)}
 }
 
 type Auth struct {
@@ -49,7 +54,7 @@ func (a *Auth) GetCredentials(name string) *UserCredential {
 	return a.UserCredentials[name]
 }
 
-func (a *Auth) RegisterCredential(uc *UserCredentialInsecure) error {
+func (a *Auth) RegisterCredential(uc *UserCredentialClear) error {
 
 	if a.UserCredentials[uc.Username] != nil {
 
@@ -94,7 +99,7 @@ func (auth *Auth) InitCredentials(path string) error {
 	if err != nil {
 		return ErrorInitCredentialsFileRead
 	}
-	var credentialsArray []*UserCredentialInsecure
+	var credentialsArray []*UserCredentialClear
 
 	err = json.Unmarshal(byteValue, &credentialsArray)
 	if err != nil {

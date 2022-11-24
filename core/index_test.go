@@ -10,9 +10,11 @@ var wo = &WorldOpts{
 	Paths: &Paths{users: "./users_test.json", appointments: "./appointments_test.json", credentials: "./credentials_test.json"},
 }
 
+var w *World
+
 func TestInit(t *testing.T) {
 
-	w := Init(wo)
+	w = Init(wo)
 
 	assert.Equal(t, 1, w.CountAppointmentsAvailable(), "availabile appointments")
 	assert.Equal(t, 2, w.CountAppointmentUnavailable(), "unavailable appointments")
@@ -28,5 +30,15 @@ func TestInit(t *testing.T) {
 }
 
 func TestSignUp(t *testing.T) {
+	w = Init(wo)
+
+	newusername := "newbie"
+	newpassword := "123"
+	w.SignUp(newusername, newpassword)
+	is := w.IsAuthenticated(newusername, newpassword)
+
+	if !is {
+		t.Fatalf("should authenticate new user")
+	}
 
 }

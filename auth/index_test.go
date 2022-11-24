@@ -56,7 +56,7 @@ func TestPasswordHash(t *testing.T) {
 
 func TestAuthentications(t *testing.T) {
 
-	uc := &UserCredentialInsecure{Username: "someu", Password: "somep"}
+	uc := &UserCredentialClear{Username: "someu", Password: "somep"}
 
 	wantAuth := false
 	gotAuth := authT.IsAuth(uc.Username, uc.Password)

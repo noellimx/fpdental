@@ -116,14 +116,14 @@ func (w *World) loadCredentials() error {
 
 func (w *World) IsAuthenticated(username string, password string) (is bool) {
 
-	request := &auth.UserCredentialInsecure{Username: username, Password: auth.PasswordUnhashed(password)}
+	request := &auth.UserCredentialClear{Username: username, Password: auth.PasswordUnhashed(password)}
 
 	return w.Auth.IsAuth(request.Username, request.Password)
 }
 
-func Init(w *WorldOpts) *World {
+func Init(wo *WorldOpts) *World {
 
-	world := &World{WorldOpts: w, PatientOrReceptionists: make(PatientOrReceptionists)}
+	world := &World{WorldOpts: wo, PatientOrReceptionists: make(PatientOrReceptionists)}
 
 	world.loadReceptionist()
 	world.loadPatients()
@@ -132,4 +132,14 @@ func Init(w *WorldOpts) *World {
 
 	world.loadCredentials()
 	return world
+}
+
+func (w *World) SignUp(username, password string) error {
+	cred := auth.NewUserCredentialClear(username, password)
+	err := w.Auth.RegisterCredential(cred)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
