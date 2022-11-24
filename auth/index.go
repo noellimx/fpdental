@@ -39,6 +39,12 @@ func (a *Auth) CountCredentials() int {
 }
 
 func (a *Auth) GetCredentials(name string) *UserCredential {
+	log.Printf("%d", a.CountCredentials())
+
+	for _, c := range a.UserCredentials {
+		log.Printf("creds checking %s%s", c.username, c.password)
+
+	}
 
 	return a.UserCredentials[name]
 }
@@ -65,7 +71,7 @@ func hash(s string) string {
 func hashPassword(s PasswordUnhashed) PasswordHashed {
 	return PasswordHashed(hash(string(s)))
 }
-func (auth *Auth) isAuth(username string, password PasswordUnhashed) bool {
+func (auth *Auth) IsAuth(username string, password PasswordUnhashed) bool {
 	c := auth.GetCredentials(username)
 	if c == nil {
 		return false
@@ -114,7 +120,7 @@ func (auth *Auth) InitCredentials(path string) error {
 
 }
 
-func newAuth() *Auth {
+func NewAuth() *Auth {
 
 	a := &Auth{}
 	a.UserCredentials = make(map[string]*UserCredential)

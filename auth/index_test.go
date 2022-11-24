@@ -13,7 +13,7 @@ var authT *Auth = &Auth{}
 
 // TODO: automatic teardown after every test
 func teardown() {
-	authT = newAuth()
+	authT = NewAuth()
 }
 
 var path_rel string = "./credentials_test.json"
@@ -59,13 +59,13 @@ func TestAuthentications(t *testing.T) {
 	uc := &UserCredentialInsecure{Username: "someu", Password: "somep"}
 
 	wantAuth := false
-	gotAuth := authT.isAuth(uc.Username, uc.Password)
+	gotAuth := authT.IsAuth(uc.Username, uc.Password)
 
 	assert.Equal(t, wantAuth, gotAuth, "Before storing credentials - isauth")
 
 	authT.RegisterCredential(uc) // 1.1:be // 1.2:be
 	wantAuth = true
-	gotAuth = authT.isAuth(uc.Username, uc.Password) // 1.3:be // 1.4:be
+	gotAuth = authT.IsAuth(uc.Username, uc.Password) // 1.3:be // 1.4:be
 
 	assert.Equal(t, wantAuth, gotAuth, "After storing credentials - isauth")
 

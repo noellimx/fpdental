@@ -2,6 +2,7 @@ package core
 
 import (
 	"fpdental/appointment"
+	"fpdental/auth"
 	"fpdental/user"
 	"log"
 
@@ -11,6 +12,7 @@ import (
 type Paths struct {
 	users        string
 	appointments string
+	credentials  string
 }
 type WorldOpts struct {
 	*Paths
@@ -39,6 +41,7 @@ type PatientOrReceptionists map[string]*PatientOrReceptionist
 type World struct {
 	PatientOrReceptionists
 	*WorldOpts
+	*auth.Auth
 }
 
 func (w *World) loadPatients() error {
@@ -96,6 +99,28 @@ func (w *World) CountAppointmentUnavailable() int {
 	return sum
 }
 
+func (w *World) loadCredentials() error {
+	auth := auth.NewAuth()
+
+	err := auth.InitCredentials(w.WorldOpts.Paths.credentials)
+
+	if err != nil {
+		return err
+	}
+
+	w.Auth = auth
+
+	return nil
+
+}
+
+func (w *World) IsAuthenticated(username string, password string) (is bool) {
+
+	request := &auth.UserCredentialInsecure{Username: username, Password: auth.PasswordUnhashed(password)}
+
+	return w.Auth.IsAuth(request.Username, request.Password)
+}
+
 func Init(w *WorldOpts) *World {
 
 	world := &World{WorldOpts: w, PatientOrReceptionists: make(PatientOrReceptionists)}
@@ -105,9 +130,6 @@ func Init(w *WorldOpts) *World {
 
 	world.loadAppointments()
 
+	world.loadCredentials()
 	return world
-}
-
-func IsAuthenticated(username string, password string) {
-
 }
