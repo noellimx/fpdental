@@ -53,7 +53,6 @@ func (a *Auth) RegisterCredential(uc *UserCredentialInsecure) error {
 	return nil
 }
 
-var GAuth *Auth = &Auth{}
 var ErrorInitCredentialsFileOpenFail = errors.New("auth-init-credentials: file open failed")
 var ErrorInitCredentialsFileRead = errors.New("auth-init-credentials: file read failed")
 var ErrorInitCredentialsUnmarshal = errors.New("auth-init-credentials: unmarshal failed")
@@ -75,7 +74,7 @@ func (auth *Auth) isAuth(username string, password PasswordUnhashed) bool {
 	return c.isAuthByPassword(password)
 }
 
-func InitCredentials(path string) error {
+func (auth *Auth) InitCredentials(path string) error {
 
 	log.Printf("[InitCredentials] path <- %s", path)
 	jsonFile, err := os.Open(path)
@@ -109,7 +108,7 @@ func InitCredentials(path string) error {
 
 	}
 
-	GAuth.UserCredentials = credentialsMap
+	auth.UserCredentials = credentialsMap
 
 	return nil
 

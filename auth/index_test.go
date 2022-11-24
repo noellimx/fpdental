@@ -9,9 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var authT *Auth = &Auth{}
+
 // TODO: automatic teardown after every test
 func teardown() {
-	GAuth = newAuth()
+	authT = newAuth()
 }
 
 var path_rel string = "./credentials_test.json"
@@ -19,7 +21,7 @@ var path_rel string = "./credentials_test.json"
 func TestInitCredentialsCount(t *testing.T) {
 
 	want := 0
-	got := GAuth.CountCredentials()
+	got := authT.CountCredentials()
 
 	assert.Equal(t, want, got, "len(credentials)")
 
@@ -31,11 +33,11 @@ func TestInitCredentialsCount(t *testing.T) {
 
 	t.Logf("[TestInitCredentials] %s %s", path_rel, path_abs)
 
-	InitCredentials(path_abs) // 1.5:be
+	authT.InitCredentials(path_abs) // 1.5:be
 
 	wantAdminCount := 1
 	want = wantAdminCount
-	got = GAuth.CountCredentials()
+	got = authT.CountCredentials()
 	assert.Equal(t, want, got, "len(credentials) after init. ")
 
 	teardown()
@@ -56,13 +58,13 @@ func TestAuthentications(t *testing.T) {
 	uc := &UserCredentialInsecure{Username: "someu", Password: "somep"}
 
 	wantAuth := false
-	gotAuth := GAuth.isAuth(uc.Username, uc.Password)
+	gotAuth := authT.isAuth(uc.Username, uc.Password)
 
 	assert.Equal(t, wantAuth, gotAuth, "Before storing credentials - isauth")
 
-	GAuth.RegisterCredential(uc) // 1.1:be // 1.2:be
+	authT.RegisterCredential(uc) // 1.1:be // 1.2:be
 	wantAuth = true
-	gotAuth = GAuth.isAuth(uc.Username, uc.Password) // 1.3:be // 1.4:be
+	gotAuth = authT.isAuth(uc.Username, uc.Password) // 1.3:be // 1.4:be
 
 	assert.Equal(t, wantAuth, gotAuth, "After storing credentials - isauth")
 

@@ -107,3 +107,7 @@ func Init(w *WorldOpts) *World {
 
 	return world
 }
+
+func IsAuthenticated(username string, password string) {
+
+}
