@@ -3,15 +3,15 @@ package appointment
 import (
 	"encoding/json"
 	"errors"
+	"fpdental/utils"
 	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/google/uuid"
 )
 
 type Appointment struct {
-	id uuid.UUID
+	Id uuid.UUID
 
 	Description string `json:"description"`
 }
@@ -19,14 +19,24 @@ type Appointment struct {
 type AppointmentExtracted struct {
 	Id          string `json:"id"`
 	Description string `json:"description"`
+	Booker      string `json:"booker"`
 }
 
+func Transform(ap *AppointmentExtracted) (*Appointment, error) {
+
+	id, err := uuid.Parse(ap.Id)
+
+	if err != nil {
+		return nil, utils.ErrorTODO
+	}
+	return &Appointment{Id: id, Description: ap.Description}, nil
+}
 func (ap *Appointment) idString() string {
-	return ap.id.String()
+	return ap.Id.String()
 }
 
 func newAppointment() *Appointment {
-	return &Appointment{id: uuid.New()}
+	return &Appointment{Id: uuid.New()}
 }
 
 type Appointments struct {
@@ -49,7 +59,7 @@ var ErrorLoadAppointmentsFileOpenFail = errors.New("appointment-load: file open 
 var ErrorLoadAppointmentsFileRead = errors.New("appointment-load: file read failed")
 var ErrorLoadAppointmentsUnmarshal = errors.New("appointment-load: unmarshal failed")
 
-func LoadAppointmentsExtracted(path string) ([]*AppointmentExtracted, error) {
+func ExtractFromPath(path string) ([]*AppointmentExtracted, error) {
 
 	jsonFile, err := os.Open(path)
 
@@ -70,19 +80,5 @@ func LoadAppointmentsExtracted(path string) ([]*AppointmentExtracted, error) {
 		return nil, ErrorLoadAppointmentsUnmarshal
 	}
 	return appointmentsExtractedArray, nil
-
-}
-
-func loadAppointments(path string) error {
-
-	log.Printf("[LoadAppointments] path <- %s", path)
-
-	_, err := LoadAppointmentsExtracted(path)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 
 }

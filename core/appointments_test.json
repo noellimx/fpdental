@@ -2,12 +2,16 @@
   {
     "description": "a1",
     "id": "d557c96c-ae2e-40a1-bc45-bd1b05e52f46",
-    "booker": ""
+    "booker": "u2"
   },
   {
     "description": "a2",
     "id": "652d5ac0-dc0f-4763-9b06-4c67bcacf6da",
     "booker": "u1"
   },
-  { "description": "a3", "id": "f1697723-862b-4623-b821-f02a1aae68a1" }
+  {
+    "description": "a3",
+    "id": "f1697723-862b-4623-b821-f02a1aae68a1",
+    "booker": ""
+  }
 ]

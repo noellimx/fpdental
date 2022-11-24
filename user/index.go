@@ -2,7 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"fpdental/appointment"
 	"fpdental/utils"
 	"io/ioutil"
 	"os"
@@ -11,9 +10,8 @@ import (
 )
 
 type User struct {
-	id   uuid.UUID
-	name string
-	*appointment.Appointments
+	Id   uuid.UUID
+	Name string
 }
 
 type UserExtracted struct {
@@ -23,8 +21,8 @@ type UserExtracted struct {
 
 type Users map[string]*User
 
-func newUser(name string, id uuid.UUID) *User {
-	return &User{id: id, name: name, Appointments: appointment.NewAppointments()}
+func NewUser(name string, id uuid.UUID) *User {
+	return &User{Id: id, Name: name}
 }
 
 func transformUser(ue *UserExtracted) (*User, error) {
@@ -37,8 +35,8 @@ func transformUser(ue *UserExtracted) (*User, error) {
 	}
 
 	return &User{
-		name: username,
-		id:   id,
+		Name: username,
+		Id:   id,
 	}, nil
 
 }
@@ -57,23 +55,23 @@ func LoadUsersExtracted(path string) ([]*UserExtracted, error) {
 	if err != nil {
 		return nil, utils.ErrorTODO
 	}
-	var appointmentsExtractedArray []*UserExtracted
+	var usersExtractedArray []*UserExtracted
 
-	err = json.Unmarshal(byteValue, &appointmentsExtractedArray)
+	err = json.Unmarshal(byteValue, &usersExtractedArray)
 	if err != nil {
 		return nil, utils.ErrorTODO
 	}
-	return appointmentsExtractedArray, nil
+	return usersExtractedArray, nil
 }
 
-func LoadUsers(path string) (map[string]*User, error) {
+func LoadUsers(path string) ([]*User, error) {
 
 	ues, err := LoadUsersExtracted(path)
 	if err != nil {
 		return nil, err
 	}
 
-	uemap := make(map[string]*User)
+	uemap := []*User{}
 	for _, ue := range ues {
 		u, err := transformUser(ue)
 
@@ -81,7 +79,7 @@ func LoadUsers(path string) (map[string]*User, error) {
 			return nil, err
 		}
 
-		uemap[u.name] = u
+		uemap = append(uemap, u)
 	}
 
 	return uemap, nil
