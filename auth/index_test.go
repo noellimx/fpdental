@@ -36,7 +36,8 @@ func TestInitCredentialsCount(t *testing.T) {
 	authT.InitCredentials(path_abs) // 1.5:be
 
 	wantAdminCount := 1
-	want = wantAdminCount
+	wantUserCount := 1
+	want = wantAdminCount + wantUserCount
 	got = authT.CountCredentials()
 	assert.Equal(t, want, got, "len(credentials) after init. ")
 
