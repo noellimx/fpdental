@@ -5,10 +5,16 @@ import (
 	"errors"
 	"fpdental/utils"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/google/uuid"
 )
+
+type KeyAppointments string
+type Appointments struct {
+	m map[KeyAppointments]*Appointment
+}
 
 type Appointment struct {
 	Id uuid.UUID
@@ -46,22 +52,35 @@ func (aps *Appointments) AsArray() []*Appointment {
 	return arr
 }
 
+func (aps *Appointments) Log() {
+
+	for i, ap := range aps.m {
+
+		log.Printf("appns[%s] <-  %+v ", i, ap)
+
+	}
+}
 func newAppointment() *Appointment {
 	return &Appointment{Id: uuid.New()}
 }
 
-type Appointments struct {
-	m map[string]*Appointment
-}
-
 func NewAppointments() *Appointments {
-	return &Appointments{m: make(map[string]*Appointment)}
+	return &Appointments{m: make(map[KeyAppointments]*Appointment)}
 }
 
 func (aps *Appointments) Add(ap *Appointment) {
-	aps.m[ap.idString()] = ap
+	aps.m[KeyAppointments(ap.idString())] = ap
 }
 
+func (aps *Appointments) GetById(id string) (*Appointment, bool) {
+
+	log.Printf("[aps.GetById] %s", id)
+	ap, found := aps.m[KeyAppointments(id)]
+	log.Printf("[aps.GetById] %t", found)
+	log.Printf("[aps.GetById] %+v", ap)
+
+	return ap, found
+}
 func (aps *Appointments) Count() int {
 	return len(aps.m)
 }

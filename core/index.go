@@ -150,7 +150,6 @@ func (w *World) GetUserAppointments(username string) (*appointment.Appointments,
 
 	p := w.PatientOrReceptionists[username]
 
-	log.Printf("%d", w.PatientOrReceptionists[username].Count())
 	if p == nil {
 
 		return nil, utils.ErrorTODO
@@ -177,5 +176,23 @@ func (w *World) GetUserAppointmentsJSONByte(username string) ([]byte, error) {
 	}
 
 	return appsByte, nil
+
+}
+
+func (w *World) GetUserAppointmentById(username, apppointmentId string) (*appointment.Appointment, bool, error) {
+
+	aps, err := w.GetUserAppointments(username)
+
+	log.Printf("[GetUserAppoinment] %d", aps.Count())
+
+	aps.Log()
+
+	if err != nil {
+		return nil, false, err
+	}
+
+	target, found := aps.GetById(apppointmentId)
+
+	return target, found, nil
 
 }
