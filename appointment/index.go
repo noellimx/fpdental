@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -17,9 +18,9 @@ type Appointments struct {
 }
 
 type Appointment struct {
-	Id uuid.UUID
-
+	Id          uuid.UUID
 	Description string `json:"description"`
+	mtx         *sync.Mutex
 }
 
 type AppointmentExtracted struct {
@@ -35,7 +36,7 @@ func Transform(ap *AppointmentExtracted) (*Appointment, error) {
 	if err != nil {
 		return nil, utils.ErrorTODO
 	}
-	return &Appointment{Id: id, Description: ap.Description}, nil
+	return &Appointment{Id: id, Description: ap.Description, mtx: &sync.Mutex{}}, nil // TODO: Use constructor.
 }
 func (ap *Appointment) idString() string {
 	return ap.Id.String()
@@ -60,8 +61,32 @@ func (aps *Appointments) Log() {
 
 	}
 }
+
+var ErrorAppointmentNotInSet = utils.ErrorTODO
+
+func (aps *Appointments) Remove(id string) (*Appointment, error) {
+
+	toRemove, exists := aps.m[KeyAppointments(id)]
+
+	if !exists {
+
+		return nil, ErrorAppointmentNotInSet
+	}
+
+	aps.m[KeyAppointments(id)] = nil
+
+	return toRemove, nil
+}
 func newAppointment() *Appointment {
-	return &Appointment{Id: uuid.New()}
+	return &Appointment{Id: uuid.New(), mtx: &sync.Mutex{}}
+}
+
+func (ap *Appointment) Lock() {
+	ap.mtx.Lock()
+}
+
+func (ap *Appointment) Unlock() {
+	ap.mtx.Unlock()
 }
 
 func NewAppointments() *Appointments {

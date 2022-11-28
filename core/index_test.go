@@ -70,10 +70,10 @@ func TestGetUserAppointmentsJSONBye(t *testing.T) {
 func TestGetUserAppointmentById(t *testing.T) {
 	w = Init(wo)
 
-	targetUser := "u2"
+	targetUserId := "u2"
 	wantTargetUserHasBookedAppointmentId := "d557c96c-ae2e-40a1-bc45-bd1b05e52f46"
 
-	app, found, err := w.GetUserAppointmentById(targetUser, wantTargetUserHasBookedAppointmentId)
+	app, found, err := w.GetUserAppointmentById(targetUserId, wantTargetUserHasBookedAppointmentId)
 	if err != nil {
 		t.Fatalf("Error retrieving user's appointments")
 	}
@@ -87,5 +87,35 @@ func TestGetUserAppointmentById(t *testing.T) {
 	gotDescription := app.Description
 
 	assert.Equal(t, wantDescription, gotDescription, "descriptions")
+
+}
+
+func TestReleaseAppointment(t *testing.T) {
+
+	w := Init(wo)
+
+	targetUserId := "u2"
+	wantTargetUserHasBookedAppointmentId := "d557c96c-ae2e-40a1-bc45-bd1b05e52f46"
+
+	app, found, err := w.GetUserAppointmentById(targetUserId, wantTargetUserHasBookedAppointmentId)
+	if err != nil {
+		t.Fatalf("Error retrieving user's appointments")
+	}
+
+	if !found {
+		t.Fatalf("appointment should be booked by targetUser")
+	}
+
+	wantDescription := "a1"
+
+	gotDescription := app.Description
+
+	assert.Equal(t, wantDescription, gotDescription, "descriptions")
+
+	err = w.ReleaseAppointment(targetUserId, wantTargetUserHasBookedAppointmentId)
+
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 
 }

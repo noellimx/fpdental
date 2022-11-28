@@ -29,11 +29,9 @@ func newPatientOrReceptionnist(u *user.User) *PatientOrReceptionist {
 	return &PatientOrReceptionist{User: u, Appointments: appointment.NewAppointments()}
 }
 
-var receptionist = user.NewUser("", uuid.New())
-
 func (w *World) loadReceptionist() error {
 
-	w.PatientOrReceptionists[receptionist.Name] = newPatientOrReceptionnist(receptionist)
+	w.PatientOrReceptionists[w.Receptionist.Name] = newPatientOrReceptionnist(w.Receptionist)
 
 	return nil
 
@@ -42,6 +40,8 @@ func (w *World) loadReceptionist() error {
 type PatientOrReceptionists map[string]*PatientOrReceptionist
 type World struct {
 	PatientOrReceptionists
+
+	Receptionist *user.User
 	*WorldOpts
 	*auth.Auth
 }
@@ -86,14 +86,14 @@ func (w *World) loadAppointments() error {
 }
 
 func (w *World) CountAppointmentsAvailable() int {
-	return w.PatientOrReceptionists[receptionist.Name].Appointments.Count()
+	return w.PatientOrReceptionists[w.Receptionist.Name].Appointments.Count()
 }
 
 func (w *World) CountAppointmentUnavailable() int {
 	sum := 0
 
 	for _, pOr := range w.PatientOrReceptionists {
-		if pOr.User != receptionist {
+		if pOr.User != w.Receptionist {
 			sum += pOr.Appointments.Count()
 		}
 	}
@@ -126,7 +126,9 @@ func (w *World) IsAuthenticated(username string, password string) (is bool) {
 func Init(wo *WorldOpts) *World {
 
 	world := &World{WorldOpts: wo, PatientOrReceptionists: make(PatientOrReceptionists)}
+	var receptionist = user.NewUser("", uuid.New())
 
+	world.Receptionist = receptionist
 	world.loadReceptionist()
 	world.loadPatients()
 
@@ -160,15 +162,26 @@ func (w *World) GetUserAppointments(username string) (*appointment.Appointments,
 
 }
 
+func (w *World) GetUserAppointmentsCount(username string) (int, error) {
+
+	aps, err := w.GetUserAppointments(username)
+
+	if err != nil {
+
+		return 0, err
+	}
+
+	return aps.Count(), nil
+}
 func (w *World) GetUserAppointmentsJSONByte(username string) ([]byte, error) {
 
-	ps, err := w.GetUserAppointments(username)
+	aps, err := w.GetUserAppointments(username)
 
 	if err != nil {
 		return nil, err
 	}
 
-	appsByte, err := json.Marshal(ps.AsArray())
+	appsByte, err := json.Marshal(aps.AsArray())
 
 	if err != nil {
 
@@ -191,8 +204,50 @@ func (w *World) GetUserAppointmentById(username, apppointmentId string) (*appoin
 		return nil, false, err
 	}
 
-	target, found := aps.GetById(apppointmentId)
+	ap, found := aps.GetById(apppointmentId)
 
-	return target, found, nil
+	return ap, found, nil
 
+}
+
+var ErrorAppointmentUserMismatch = utils.ErrorTODO
+var ErrorReceptionistNotFound = utils.ErrorTODO
+
+func (w *World) transferAppointmentUNSAFE(userNameFrom, userNameTo, appointmentId string) error {
+
+	// UNSAFE: Not thread-safe.
+	_, found, err := w.GetUserAppointmentById(userNameFrom, appointmentId)
+
+	if err != nil {
+		return err
+	}
+
+	if !found {
+		return ErrorAppointmentUserMismatch
+	}
+
+	ap, err := w.PatientOrReceptionists[userNameFrom].Appointments.Remove(appointmentId)
+
+	if err != nil {
+		return err
+	}
+
+	w.PatientOrReceptionists[userNameTo].Add(ap) // UNSAFE: Error Check Missing
+
+	return nil
+}
+
+func (w *World) transferToReceptionist(userNameFrom, appointmentId string) error {
+
+	if w.Receptionist == nil {
+		return ErrorReceptionistNotFound
+	}
+
+	w.transferAppointmentUNSAFE(userNameFrom, w.Receptionist.Name, appointmentId)
+
+	return nil
+}
+func (w *World) ReleaseAppointment(username, appointmentId string) error {
+
+	return w.transferToReceptionist(username, appointmentId)
 }
