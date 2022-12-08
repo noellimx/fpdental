@@ -10,6 +10,13 @@ import (
 	"os"
 )
 
+var ADMIN_USERNAME = "Admin"
+
+var ROLE_ADMIN Role = "Admin"
+var ROLE_GENERAL Role = "General"
+
+type Role string
+
 type PasswordUnhashed string
 type PasswordHashed string
 
@@ -21,6 +28,7 @@ type UserCredential struct {
 func (u *UserCredential) isAuthByPassword(attempt PasswordUnhashed) bool {
 
 	pw := hashPassword(attempt)
+
 	return pw == u.password
 }
 
@@ -34,22 +42,25 @@ func NewUserCredentialClear(username, password string) *UserCredentialClear {
 	return &UserCredentialClear{Username: username, Password: PasswordUnhashed(password)}
 }
 
-type Auth struct {
+type AuthService struct {
 	UserCredentials map[string]*UserCredential
+	AdminUsername   string
 }
 
-func (a *Auth) CountCredentials() int {
+func (a *AuthService) CountCredentials() int {
 
 	return len(a.UserCredentials)
 }
 
-func (a *Auth) GetCredentials(name string) *UserCredential {
-	log.Printf("%d", a.CountCredentials())
+func (a *AuthService) GetCredentials(name string) *UserCredential {
+	log.Printf("[GetCredentials] %d", a.CountCredentials())
+
+	log.Printf("[GetCredentials] GOT %s -> %v", name, a.UserCredentials[name])
 
 	return a.UserCredentials[name]
 }
 
-func (a *Auth) RegisterCredential(uc *UserCredentialClear) error {
+func (a *AuthService) RegisterCredential(uc *UserCredentialClear) error {
 
 	if a.UserCredentials[uc.Username] != nil {
 
@@ -71,16 +82,30 @@ func hash(s string) string {
 func hashPassword(s PasswordUnhashed) PasswordHashed {
 	return PasswordHashed(hash(string(s)))
 }
-func (auth *Auth) IsAuth(username string, password PasswordUnhashed) bool {
-	c := auth.GetCredentials(username)
+func (authS *AuthService) IsAuthUnPw(username string, password PasswordUnhashed) (bool, *Token) {
+
+	c := authS.GetCredentials(username)
+
 	if c == nil {
-		return false
+		return false, nil
+	}
+	is := c.isAuthByPassword(password)
+
+	if is {
+		if username == authS.AdminUsername {
+			token := GenerateToken(username, ROLE_ADMIN, "")
+			return is, token
+		} else {
+			token := GenerateToken(username, ROLE_GENERAL, "")
+			return is, token
+		}
+	} else {
+		return is, nil
 	}
 
-	return c.isAuthByPassword(password)
 }
 
-func (auth *Auth) InitCredentials(path string) error {
+func (auth *AuthService) InitCredentials(path string) error {
 
 	log.Printf("[InitCredentials] path <- %s", path)
 	jsonFile, err := os.Open(path)
@@ -111,7 +136,7 @@ func (auth *Auth) InitCredentials(path string) error {
 			password: passwordHashed,
 		}
 		credentialsMap[c.Username] = c_secure
-
+		log.Printf("[InitCredentials] %s", c.Username)
 	}
 
 	auth.UserCredentials = credentialsMap
@@ -120,10 +145,10 @@ func (auth *Auth) InitCredentials(path string) error {
 
 }
 
-func NewAuth() *Auth {
+func NewAuth() *AuthService {
 
-	a := &Auth{}
+	a := &AuthService{}
 	a.UserCredentials = make(map[string]*UserCredential)
-
+	a.AdminUsername = ADMIN_USERNAME
 	return a
 }

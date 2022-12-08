@@ -1,9 +1,16 @@
 package middlewares
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
-func Restful(handler http.Handler) http.Handler {
+func Restful(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		log.Printf("Middleware Restful called.")
 		w.Header().Set("Content-Type", "application/json")
+
+		next.ServeHTTP(w, r)
 	})
 }

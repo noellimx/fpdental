@@ -2,22 +2,36 @@ package endpoints
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
+	"fpdental/auth"
+	"fpdental/core"
 	"fpdental/server/middlewares"
 )
 
-type Auth struct {
+type AuthenticatedEndpoint struct {
+	wo *core.World
 }
 
-func (auth *Auth) Routes() chi.Router {
+func NewAuthenticatedEndpoint(wo *core.World) *AuthenticatedEndpoint {
+	var authE = &AuthenticatedEndpoint{}
+	authE.wo = wo
+	return authE
+}
+
+func (authService *AuthenticatedEndpoint) Routes() chi.Router {
 	r := chi.NewRouter()
 
 	r.Use(middlewares.Restful)
+	// r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 
-	r.Post("/", auth.login) // POST /users - create a new user and persist it
+	// 	log.Println("weolcome auth hi")
+	// 	w.Write([]byte("welcome auth"))
+	// })
+	r.Post("/login", authService.login)
 
 	// r.Route("/{id}", func(r chi.Router) {
 	// 	// r.Use(TodoCtx) // lets have a users map, and lets actually load/manipulate
@@ -34,7 +48,9 @@ type RequestBodyAuth struct {
 	Password string
 }
 
-func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
+func (authE *AuthenticatedEndpoint) login(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("authE.login")
 	var data RequestBodyAuth
 
 	err := json.NewDecoder(r.Body).Decode(&data)
@@ -42,25 +58,32 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+	log.Printf("%+v", data)
 
-	w.WriteHeader(http.StatusNotImplemented)
+	is, token := authE.wo.IsAuthenticated(data.Username, data.Password)
+
+	log.Println("authE.login1")
 
 	responseJSON := &struct {
-		Username      string
-		StatusMessage string
+		Token *auth.Token
 	}{
-		Username:      data.Username,
-		StatusMessage: http.StatusText(http.StatusNotImplemented),
+		Token: nil,
 	}
+	if is {
+		responseJSON.Token = token
+	} else {
+		status := http.StatusUnauthorized
+		http.Error(w, http.StatusText(status), status)
+	}
+
 	responseString, err := json.Marshal(responseJSON)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
-
 	w.Write([]byte(responseString))
-}
+	return
 
-func NewAuth() *Auth {
-	return &Auth{}
 }

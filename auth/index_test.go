@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var authT *Auth = &Auth{}
+var authT *AuthService = &AuthService{}
 
 // TODO: automatic teardown after every test
 func teardown() {
@@ -59,13 +59,13 @@ func TestAuthentications(t *testing.T) {
 	uc := &UserCredentialClear{Username: "someu", Password: "somep"}
 
 	wantAuth := false
-	gotAuth := authT.IsAuth(uc.Username, uc.Password)
+	gotAuth, _ := authT.IsAuthUnPw(uc.Username, uc.Password)
 
 	assert.Equal(t, wantAuth, gotAuth, "Before storing credentials - isauth")
 
 	authT.RegisterCredential(uc) // 1.1:be // 1.2:be
 	wantAuth = true
-	gotAuth = authT.IsAuth(uc.Username, uc.Password) // 1.3:be // 1.4:be
+	gotAuth, _ = authT.IsAuthUnPw(uc.Username, uc.Password) // 1.3:be // 1.4:be
 
 	assert.Equal(t, wantAuth, gotAuth, "After storing credentials - isauth")
 

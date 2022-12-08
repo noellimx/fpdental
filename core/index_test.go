@@ -7,7 +7,7 @@ import (
 )
 
 var wo = &WorldOpts{
-	Paths: &Paths{users: "./users_test.json", appointments: "./appointments_test.json", credentials: "./credentials_test.json"},
+	Paths: &Paths{Users: "./users_test.json", Appointments: "./appointments_test.json", Credentials: "./credentials_test.json"},
 }
 
 var w *World
@@ -21,7 +21,7 @@ func TestInit(t *testing.T) {
 
 	adminUsername := "Admin"
 	adminPassword := "Password"
-	is := w.IsAuthenticated(adminUsername, adminPassword)
+	is, _ := w.IsAuthenticated(adminUsername, adminPassword)
 
 	if !is {
 		t.Fatalf("should authenticate admin")
@@ -35,7 +35,7 @@ func TestSignUp(t *testing.T) {
 	newusername := "newbie"
 	newpassword := "123"
 	w.SignUp(newusername, newpassword)
-	is := w.IsAuthenticated(newusername, newpassword)
+	is, _ := w.IsAuthenticated(newusername, newpassword)
 
 	if !is {
 		t.Fatalf("should authenticate new user")

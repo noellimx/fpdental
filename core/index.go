@@ -12,10 +12,11 @@ import (
 )
 
 type Paths struct {
-	users        string
-	appointments string
-	credentials  string
+	Users        string
+	Appointments string
+	Credentials  string
 }
+
 type WorldOpts struct {
 	*Paths
 }
@@ -43,11 +44,11 @@ type World struct {
 
 	Receptionist *user.User
 	*WorldOpts
-	*auth.Auth
+	Auth *auth.AuthService
 }
 
 func (w *World) loadPatients() error {
-	us, err := user.LoadUsers(w.WorldOpts.Paths.users)
+	us, err := user.LoadUsers(w.WorldOpts.Paths.Users)
 
 	if err != nil {
 		return err
@@ -62,7 +63,7 @@ func (w *World) loadPatients() error {
 }
 
 func (w *World) loadAppointments() error {
-	path := w.WorldOpts.Paths.appointments
+	path := w.WorldOpts.Paths.Appointments
 	log.Printf("[w.loadAppointments] path <- %s", path)
 
 	apsE, err := appointment.ExtractFromPath(path)
@@ -104,31 +105,32 @@ func (w *World) CountAppointmentUnavailable() int {
 func (w *World) loadCredentials() error {
 	auth := auth.NewAuth()
 
-	err := auth.InitCredentials(w.WorldOpts.Paths.credentials)
+	err := auth.InitCredentials(w.WorldOpts.Paths.Credentials)
 
 	if err != nil {
+		log.Println("[loadCredentials] error")
 		return err
 	}
-
 	w.Auth = auth
 
 	return nil
 
 }
 
-func (w *World) IsAuthenticated(username string, password string) (is bool) {
+func (w *World) IsAuthenticated(username string, password string) (is bool, token *auth.Token) {
 
 	request := &auth.UserCredentialClear{Username: username, Password: auth.PasswordUnhashed(password)}
 
-	return w.Auth.IsAuth(request.Username, request.Password)
+	return w.Auth.IsAuthUnPw(request.Username, request.Password)
 }
 
 func Init(wo *WorldOpts) *World {
 
 	world := &World{WorldOpts: wo, PatientOrReceptionists: make(PatientOrReceptionists)}
-	var receptionist = user.NewUser("", uuid.New())
 
+	var receptionist = user.NewUser("", uuid.New())
 	world.Receptionist = receptionist
+
 	world.loadReceptionist()
 	world.loadPatients()
 
