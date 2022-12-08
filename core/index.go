@@ -32,15 +32,15 @@ func newPatientOrReceptionnist(u *user.User) *PatientOrReceptionist {
 
 func (w *World) loadReceptionist() error {
 
-	w.PatientOrReceptionists[w.Receptionist.Name] = newPatientOrReceptionnist(w.Receptionist)
+	w.PatientsOrReceptionist[w.Receptionist.Name] = newPatientOrReceptionnist(w.Receptionist)
 
 	return nil
 
 }
 
-type PatientOrReceptionists map[string]*PatientOrReceptionist
+type PatientsOrReceptionist map[string]*PatientOrReceptionist
 type World struct {
-	PatientOrReceptionists
+	PatientsOrReceptionist
 
 	Receptionist *user.User
 	*WorldOpts
@@ -55,7 +55,7 @@ func (w *World) loadPatients() error {
 	}
 
 	for _, u := range us {
-		w.PatientOrReceptionists[u.Name] = newPatientOrReceptionnist(u)
+		w.PatientsOrReceptionist[u.Name] = newPatientOrReceptionnist(u)
 	}
 
 	return nil
@@ -76,24 +76,24 @@ func (w *World) loadAppointments() error {
 			return err
 		}
 
-		if w.PatientOrReceptionists[apE.Booker] == nil {
+		if w.PatientsOrReceptionist[apE.Booker] == nil {
 			log.Panicf(":%s", apE.Booker)
 		}
 
-		w.PatientOrReceptionists[apE.Booker].Appointments.Add(ap)
+		w.PatientsOrReceptionist[apE.Booker].Appointments.Add(ap)
 
 	}
 	return nil
 }
 
 func (w *World) CountAppointmentsAvailable() int {
-	return w.PatientOrReceptionists[w.Receptionist.Name].Appointments.Count()
+	return w.PatientsOrReceptionist[w.Receptionist.Name].Appointments.Count()
 }
 
 func (w *World) CountAppointmentUnavailable() int {
 	sum := 0
 
-	for _, pOr := range w.PatientOrReceptionists {
+	for _, pOr := range w.PatientsOrReceptionist {
 		if pOr.User != w.Receptionist {
 			sum += pOr.Appointments.Count()
 		}
@@ -129,7 +129,7 @@ func (w *World) IsValidToken(token *auth.Token) bool {
 }
 func Init(wo *WorldOpts) *World {
 
-	world := &World{WorldOpts: wo, PatientOrReceptionists: make(PatientOrReceptionists)}
+	world := &World{WorldOpts: wo, PatientsOrReceptionist: make(PatientsOrReceptionist)}
 
 	var receptionist = user.NewUser("", uuid.New())
 	world.Receptionist = receptionist
@@ -155,7 +155,7 @@ func (w *World) SignUp(username, password string) error {
 
 func (w *World) GetUserAppointments(username string) (*appointment.Appointments, error) {
 
-	p := w.PatientOrReceptionists[username]
+	p := w.PatientsOrReceptionist[username]
 
 	if p == nil {
 
@@ -231,13 +231,13 @@ func (w *World) transferAppointmentUNSAFE(userNameFrom, userNameTo, appointmentI
 		return ErrorAppointmentUserMismatch
 	}
 
-	ap, err := w.PatientOrReceptionists[userNameFrom].Appointments.Remove(appointmentId)
+	ap, err := w.PatientsOrReceptionist[userNameFrom].Appointments.Remove(appointmentId)
 
 	if err != nil {
 		return err
 	}
 
-	w.PatientOrReceptionists[userNameTo].Add(ap) // UNSAFE: Error Check Missing
+	w.PatientsOrReceptionist[userNameTo].Add(ap) // UNSAFE: Error Check Missing
 
 	return nil
 }
