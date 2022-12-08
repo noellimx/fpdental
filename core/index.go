@@ -124,6 +124,9 @@ func (w *World) IsAuthenticated(username string, password string) (is bool, toke
 	return w.Auth.IsAuthUnPw(request.Username, request.Password)
 }
 
+func (w *World) IsValidToken(token *auth.Token) bool {
+	return w.Auth.IsAssociatedToken(token)
+}
 func Init(wo *WorldOpts) *World {
 
 	world := &World{WorldOpts: wo, PatientOrReceptionists: make(PatientOrReceptionists)}

@@ -23,8 +23,14 @@ type PasswordHashed string
 type UserCredential struct {
 	password PasswordHashed
 	username string
+	tokens   map[string]*Token
 }
 
+func (u *UserCredential) IsTokenInPossession(token *Token) bool {
+
+	return u.tokens[token.Id] != nil
+
+}
 func (u *UserCredential) isAuthByPassword(attempt PasswordUnhashed) bool {
 
 	pw := hashPassword(attempt)
@@ -50,6 +56,18 @@ type AuthService struct {
 func (a *AuthService) CountCredentials() int {
 
 	return len(a.UserCredentials)
+}
+func (a *AuthService) IsAssociatedToken(token *Token) bool {
+	log.Printf("[IsAssociatedToken] %s", token.Username)
+
+	credential := a.UserCredentials[token.Username]
+
+	if credential != nil {
+		return credential.IsTokenInPossession(token)
+	}
+
+	return false
+
 }
 
 func (a *AuthService) GetCredentials(name string) *UserCredential {
@@ -93,10 +111,10 @@ func (authS *AuthService) IsAuthUnPw(username string, password PasswordUnhashed)
 
 	if is {
 		if username == authS.AdminUsername {
-			token := GenerateToken(username, ROLE_ADMIN, "")
+			token := authS.GenerateAndAssociateTokenToUser(username, ROLE_ADMIN, "")
 			return is, token
 		} else {
-			token := GenerateToken(username, ROLE_GENERAL, "")
+			token := authS.GenerateAndAssociateTokenToUser(username, ROLE_GENERAL, "")
 			return is, token
 		}
 	} else {
@@ -105,6 +123,21 @@ func (authS *AuthService) IsAuthUnPw(username string, password PasswordUnhashed)
 
 }
 
+func (auth *AuthService) GenerateAndAssociateTokenToUser(username string, role Role, expiry string) *Token {
+	token := GenerateToken(username, role, expiry)
+	auth.UserCredentials[token.Username].tokens[token.Id] = token
+	return token
+}
+
+func NewCredential(username string, passwordHashed PasswordHashed) *UserCredential {
+
+	return &UserCredential{
+		username: username,
+		password: passwordHashed,
+		tokens:   make(map[string]*Token),
+	}
+
+}
 func (auth *AuthService) InitCredentials(path string) error {
 
 	log.Printf("[InitCredentials] path <- %s", path)
@@ -130,11 +163,8 @@ func (auth *AuthService) InitCredentials(path string) error {
 
 	for _, c := range credentialsArray {
 		passwordHashed := hashPassword(c.Password)
+		c_secure := NewCredential(c.Username, passwordHashed)
 
-		c_secure := &UserCredential{
-			username: c.Username,
-			password: passwordHashed,
-		}
 		credentialsMap[c.Username] = c_secure
 		log.Printf("[InitCredentials] %s", c.Username)
 	}
