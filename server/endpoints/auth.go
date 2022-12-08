@@ -12,34 +12,23 @@ import (
 	"fpdental/server/middlewares"
 )
 
-type AuthenticatedEndpoint struct {
+type EndpointServiceAuthentication struct {
 	wo *core.World
 }
 
-func NewAuthenticatedEndpoint(wo *core.World) *AuthenticatedEndpoint {
-	var authE = &AuthenticatedEndpoint{}
+func NewEndpointServiceAuthentication(wo *core.World) *EndpointServiceAuthentication {
+	var authE = &EndpointServiceAuthentication{}
 	authE.wo = wo
 	return authE
 }
 
-func (authService *AuthenticatedEndpoint) Routes() chi.Router {
+func (authService *EndpointServiceAuthentication) Routes() chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(middlewares.Restful)
-	// r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+	r.Use(middlewares.RestJSON)
 
-	// 	log.Println("weolcome auth hi")
-	// 	w.Write([]byte("welcome auth"))
-	// })
 	r.Post("/login", authService.login)
 	r.Post("/is-valid-token", authService.isValidToken)
-
-	// r.Route("/{id}", func(r chi.Router) {
-	// 	// r.Use(TodoCtx) // lets have a users map, and lets actually load/manipulate
-	// 	r.Get("/", Get)       // GET /users/{id} - read a single user by :id
-	// 	r.Put("/", Update)    // PUT /users/{id} - update a single user by :id
-	// 	r.Delete("/", Delete) // DELETE /users/{id} - delete a single user by :id
-	// })
 
 	return r
 }
@@ -49,7 +38,7 @@ type RequestBodyAuthLogin struct {
 	Password string
 }
 
-func (authE *AuthenticatedEndpoint) login(w http.ResponseWriter, r *http.Request) {
+func (authE *EndpointServiceAuthentication) login(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("authE.login")
 	var data RequestBodyAuthLogin
@@ -93,7 +82,7 @@ type RequestBodyAuthIsValidToken struct {
 	Token auth.Token
 }
 
-func (authE *AuthenticatedEndpoint) isValidToken(w http.ResponseWriter, r *http.Request) {
+func (authE *EndpointServiceAuthentication) isValidToken(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("[authE.isValidToken]")
 	var data RequestBodyAuthIsValidToken

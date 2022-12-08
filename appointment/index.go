@@ -23,6 +23,15 @@ type Appointment struct {
 	mtx         *sync.Mutex
 }
 
+func (aps *Appointments) AsSlice() []*Appointment {
+
+	arr := []*Appointment{}
+	for _, a := range aps.m {
+		arr = append(arr, a)
+	}
+	return arr
+}
+
 type AppointmentExtracted struct {
 	Id          string `json:"id"`
 	Description string `json:"description"`
@@ -40,17 +49,6 @@ func Transform(ap *AppointmentExtracted) (*Appointment, error) {
 }
 func (ap *Appointment) idString() string {
 	return ap.Id.String()
-}
-
-func (aps *Appointments) AsArray() []*Appointment {
-
-	arr := []*Appointment{}
-
-	for _, a := range aps.m {
-
-		arr = append(arr, a)
-	}
-	return arr
 }
 
 func (aps *Appointments) Log() {

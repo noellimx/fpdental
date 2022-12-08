@@ -153,26 +153,41 @@ func (w *World) SignUp(username, password string) error {
 	return nil
 }
 
-func (w *World) GetUserAppointments(username string) (*appointment.Appointments, error) {
+func (w *World) getUserAppointments(username string) (*appointment.Appointments, error) {
 
 	p := w.PatientsOrReceptionist[username]
 
 	if p == nil {
-
 		return nil, utils.ErrorTODO
-
 	}
 
 	return p.Appointments, nil
+}
+
+var ErrorUnauthenticated = utils.ErrorTODO
+var ErrorUserNotFound = utils.ErrorTODO
+
+func (w *World) GetUserAppointments(token *auth.Token) (*appointment.Appointments, error) {
+	is := w.IsValidToken(token)
+
+	if is {
+
+		p := w.PatientsOrReceptionist[token.Username]
+		if p == nil {
+			return nil, ErrorUserNotFound
+		}
+		return p.Appointments, nil
+	} else {
+		return nil, ErrorUnauthenticated
+	}
 
 }
 
 func (w *World) GetUserAppointmentsCount(username string) (int, error) {
 
-	aps, err := w.GetUserAppointments(username)
+	aps, err := w.getUserAppointments(username)
 
 	if err != nil {
-
 		return 0, err
 	}
 
@@ -180,16 +195,15 @@ func (w *World) GetUserAppointmentsCount(username string) (int, error) {
 }
 func (w *World) GetUserAppointmentsJSONByte(username string) ([]byte, error) {
 
-	aps, err := w.GetUserAppointments(username)
+	aps, err := w.getUserAppointments(username)
 
 	if err != nil {
 		return nil, err
 	}
 
-	appsByte, err := json.Marshal(aps.AsArray())
+	appsByte, err := json.Marshal(aps.AsSlice())
 
 	if err != nil {
-
 		return nil, err
 	}
 
@@ -199,7 +213,7 @@ func (w *World) GetUserAppointmentsJSONByte(username string) ([]byte, error) {
 
 func (w *World) GetUserAppointmentById(username, apppointmentId string) (*appointment.Appointment, bool, error) {
 
-	aps, err := w.GetUserAppointments(username)
+	aps, err := w.getUserAppointments(username)
 
 	log.Printf("[GetUserAppoinment] %d", aps.Count())
 

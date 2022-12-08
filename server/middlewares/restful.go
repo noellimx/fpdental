@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func Restful(next http.Handler) http.Handler {
+func RestJSON(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("Middleware Restful called.")

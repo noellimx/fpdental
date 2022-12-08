@@ -48,7 +48,7 @@ func TestGetUserAppointmentsJSONBye(t *testing.T) {
 	w = Init(wo)
 
 	targetUser := "u2"
-	gotApp, err := w.GetUserAppointments(targetUser)
+	gotApp, err := w.getUserAppointments(targetUser)
 
 	if err != nil {
 
