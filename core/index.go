@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
 	"fpdental/appointment"
 	"fpdental/auth"
 	"fpdental/user"
@@ -48,9 +49,14 @@ type World struct {
 }
 
 func (w *World) loadPatients() error {
+
+	log.Println("[::loadPatients]")
+
 	us, err := user.LoadUsers(w.WorldOpts.Paths.Users)
 
 	if err != nil {
+
+		log.Printf("[ERROR] [::loadPatients] %s\n", err)
 		return err
 	}
 
@@ -127,12 +133,19 @@ func (w *World) IsAuthenticated(username string, password string) (is bool, toke
 func (w *World) IsValidToken(token *auth.Token) bool {
 	return w.Auth.IsAssociatedToken(token)
 }
+
+func newReceptionist() *user.User {
+
+	return user.NewUser("", uuid.New())
+
+}
 func Init(wo *WorldOpts) *World {
+
+	log.Printf("[World::init]")
 
 	world := &World{WorldOpts: wo, PatientsOrReceptionist: make(PatientsOrReceptionist)}
 
-	var receptionist = user.NewUser("", uuid.New())
-	world.Receptionist = receptionist
+	world.Receptionist = newReceptionist()
 
 	world.loadReceptionist()
 	world.loadPatients()
@@ -164,8 +177,8 @@ func (w *World) getUserAppointments(username string) (*appointment.Appointments,
 	return p.Appointments, nil
 }
 
-var ErrorUnauthenticated = utils.ErrorTODO
-var ErrorUserNotFound = utils.ErrorTODO
+var ErrorUnauthenticated = errors.New(("Unauthenticated"))
+var ErrorUserNotFound = errors.New(("User Not Found"))
 
 func (w *World) GetUserAppointments(token *auth.Token) (*appointment.Appointments, error) {
 	is := w.IsValidToken(token)
@@ -266,7 +279,18 @@ func (w *World) transferToReceptionist(userNameFrom, appointmentId string) error
 
 	return nil
 }
-func (w *World) ReleaseAppointment(username, appointmentId string) error {
-
+func (w *World) releaseAppointmentUNSAFE(username, appointmentId string) error {
 	return w.transferToReceptionist(username, appointmentId)
+}
+
+func (w *World) ReleaseAppointment(token *auth.Token, appointmentId uuid.UUID) error {
+
+	is := w.Auth.IsAssociatedToken(token)
+
+	if !is {
+
+		log.Printf("[Error] [::ReleaseAppointment]")
+		return utils.ErrorTODO
+	}
+	return w.releaseAppointmentUNSAFE(token.Username, appointmentId.String())
 }

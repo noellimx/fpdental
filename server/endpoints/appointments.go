@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type EndpointServiceUser struct {
@@ -24,9 +25,13 @@ func NewEndpointServiceUser(wo *core.World) *EndpointServiceUser {
 
 func (ep *EndpointServiceUser) Routes() chi.Router {
 	r := chi.NewRouter()
+
 	r.Use(middlewares.RestJSON)
 
 	r.Post("/", ep.appointments)
+
+	r.Post("/release", ep.releaseAppointment)
+
 	return r
 }
 
@@ -55,6 +60,7 @@ func (authE *EndpointServiceUser) appointments(w http.ResponseWriter, r *http.Re
 	appointments, err := authE.getAppointments(&data.Token)
 
 	if err != nil {
+		log.Printf("[EndpointServiceUser::appointments] getAppointments::Error %s", err)
 
 		status := http.StatusBadRequest
 		http.Error(w, http.StatusText(status), status)
@@ -74,6 +80,53 @@ func (authE *EndpointServiceUser) appointments(w http.ResponseWriter, r *http.Re
 		return
 	}
 	w.Write([]byte(responseString))
+	return
+
+}
+
+type RequestBodyReleaseAppointment struct {
+	Token         auth.Token
+	AppointmentId uuid.UUID
+}
+
+func (authE *EndpointServiceUser) releaseAppointment(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("[EndpointServiceUser::releaseAppointment]")
+	var data RequestBodyReleaseAppointment
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	log.Printf("[EndpointServiceUser::releaseAppointment] Data %+v", data)
+
+	if err != nil {
+
+		status := http.StatusBadRequest
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	err = authE.world.ReleaseAppointment(&data.Token, data.AppointmentId)
+
+	responseJSON := struct {
+		Is    bool
+		Error error
+	}{}
+	if err != nil {
+		status := http.StatusBadRequest
+		responseJSON.Is = false
+		responseJSON.Error = err
+		http.Error(w, http.StatusText(status), status)
+	} else {
+		responseJSON.Is = true
+	}
+
+	responseString, err := json.Marshal(responseJSON)
+
+	w.Write([]byte(responseString))
+
 	return
 
 }

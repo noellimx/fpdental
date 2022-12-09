@@ -2,9 +2,11 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"fpdental/utils"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -64,7 +66,29 @@ func LoadUsersExtracted(path string) ([]*UserExtracted, error) {
 	return usersExtractedArray, nil
 }
 
+func MapAsString[K comparable, V any](somemap map[K]V) string {
+	var sb strings.Builder
+
+	for _, v := range somemap {
+		sb.WriteString(fmt.Sprintf("%v", v))
+	}
+
+	return sb.String()
+
+}
+
+func PointerMapAsString[I any](list []*I) string {
+	var sb strings.Builder
+
+	for _, v := range list {
+		sb.WriteString(fmt.Sprintf("%+v", v))
+	}
+
+	return sb.String()
+}
+
 func LoadUsers(path string) ([]*User, error) {
+	fmt.Println("[LoadUsers] Loading...")
 
 	ues, err := LoadUsersExtracted(path)
 	if err != nil {
@@ -82,6 +106,6 @@ func LoadUsers(path string) ([]*User, error) {
 		uemap = append(uemap, u)
 	}
 
+	fmt.Printf("[LoadUsers] %s\n", PointerMapAsString(uemap))
 	return uemap, nil
-
 }

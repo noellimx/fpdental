@@ -112,7 +112,7 @@ func TestReleaseAppointment(t *testing.T) {
 
 	assert.Equal(t, wantDescription, gotDescription, "descriptions")
 
-	err = w.ReleaseAppointment(targetUserId, wantTargetUserHasBookedAppointmentId)
+	err = w.releaseAppointmentUNSAFE(targetUserId, wantTargetUserHasBookedAppointmentId)
 
 	if err != nil {
 		t.Fatalf(err.Error())
