@@ -1,26 +1,30 @@
 [
   {
-    "description": "a1",
+    "description": "Appointment 1",
     "id": "d557c96c-ae2e-40a1-bc45-bd1b05e52f46",
     "booker": "u2"
   },
   {
-    "description": "a2",
+    "description": "Appointment 2",
     "id": "652d5ac0-dc0f-4763-9b06-4c67bcacf6da",
     "booker": "u2"
   },
   {
-    "description": "a5",
+    "description": "Appointment 3",
     "id": "eb21c7c2-2d72-4301-9fcd-9029dfe2781d",
     "booker": "u1"
   },
   {
-    "description": "a3",
+    "description": "Appointment 4",
     "id": "f1697723-862b-4623-b821-f02a1aae68a1",
     "booker": ""
+  },{
+    "description": "Appointment 5",
+    "id": "02f125a6-7b96-4961-8541-92d383958ce7",
+    "booker": "u3"
   },
   {
-    "description": "a4",
+    "description": "Appointment 6",
     "id": "66c994f2-77e0-4fff-8a60-a036bef6f6b4",
     "booker": ""
   }
