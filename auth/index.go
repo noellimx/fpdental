@@ -81,7 +81,6 @@ func (a *AuthService) GetCredentials(name string) *UserCredential {
 func (a *AuthService) RegisterCredential(uc *UserCredentialClear) error {
 
 	if a.UserCredentials[uc.Username] != nil {
-
 		return ErrorUsernameTaken
 	}
 	a.UserCredentials[uc.Username] = &UserCredential{username: uc.Username, password: hashPassword(uc.Password)}

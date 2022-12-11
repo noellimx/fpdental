@@ -196,6 +196,16 @@ func (w *World) GetUserAppointments(token *auth.Token) (*appointment.Appointment
 
 }
 
+func (w *World) GetAvailableAppointments() (*appointment.Appointments, error) {
+
+	p := w.PatientsOrReceptionist[w.Receptionist.Name]
+	if p == nil {
+		return nil, ErrorUserNotFound
+	}
+	return p.Appointments, nil
+
+}
+
 func (w *World) GetUserAppointmentsCount(username string) (int, error) {
 
 	aps, err := w.getUserAppointments(username)
@@ -265,7 +275,7 @@ func (w *World) transferAppointmentUNSAFE(userNameFrom, userNameTo, appointmentI
 	}
 
 	w.PatientsOrReceptionist[userNameTo].Add(ap) // UNSAFE: Error Check Missing
-
+	log.Printf("[transferAppointmentUNSAFE] #%s from %s to %s ", userNameFrom, userNameTo, appointmentId)
 	return nil
 }
 
@@ -292,5 +302,25 @@ func (w *World) ReleaseAppointment(token *auth.Token, appointmentId uuid.UUID) e
 		log.Printf("[Error] [::ReleaseAppointment]")
 		return utils.ErrorTODO
 	}
-	return w.releaseAppointmentUNSAFE(token.Username, appointmentId.String())
+	return w.transferToReceptionist(token.Username, appointmentId.String())
+}
+
+func (w *World) transferFromReceptionist(userNameTo, appointmentId string) error {
+	if w.Receptionist == nil {
+		return ErrorReceptionistNotFound
+	}
+
+	w.transferAppointmentUNSAFE(w.Receptionist.Name, userNameTo, appointmentId)
+
+	return nil
+}
+func (w *World) BookAppointment(token *auth.Token, appointmentId uuid.UUID) error {
+	log.Println("[BookAppointment]")
+	is := w.Auth.IsAssociatedToken(token)
+
+	if !is {
+		log.Printf("[Error] [::BookAppointment]")
+		return utils.ErrorTODO
+	}
+	return w.transferFromReceptionist(token.Username, appointmentId.String())
 }

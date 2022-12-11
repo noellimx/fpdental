@@ -28,11 +28,55 @@ func (ep *EndpointServiceUser) Routes() chi.Router {
 
 	r.Use(middlewares.RestJSON)
 
-	r.Post("/", ep.appointments)
+	r.Post("/", ep.userAppointments)
 
 	r.Post("/release", ep.releaseAppointment)
+	r.Get("/avail", ep.availableAppointments)
+	r.Post("/book", ep.book)
 
 	return r
+}
+
+func (authE *EndpointServiceUser) book(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("[EndpointServiceUser::book]")
+	var data RequestBodyBookAppointment
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	log.Printf("[EndpointServiceUser::book] Data %+v", data)
+
+	if err != nil {
+
+		status := http.StatusBadRequest
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	err = authE.world.BookAppointment(&data.Token, data.AppointmentId)
+
+	responseJSON := struct {
+		Is    bool
+		Error error
+	}{}
+	if err != nil {
+		status := http.StatusBadRequest
+		responseJSON.Is = false
+		responseJSON.Error = err
+		http.Error(w, http.StatusText(status), status)
+	} else {
+		responseJSON.Is = true
+	}
+
+	responseString, err := json.Marshal(responseJSON)
+
+	w.Write([]byte(responseString))
+
+	return
+
 }
 
 func (ep *EndpointServiceUser) getAppointments(token *auth.Token) (*appointment.Appointments, error) {
@@ -45,7 +89,7 @@ type RequestBodyAppointments struct {
 	Token auth.Token
 }
 
-func (authE *EndpointServiceUser) appointments(w http.ResponseWriter, r *http.Request) {
+func (authE *EndpointServiceUser) userAppointments(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("[EndpointServiceUser::appointments]")
 	var data RequestBodyAppointments
@@ -83,11 +127,43 @@ func (authE *EndpointServiceUser) appointments(w http.ResponseWriter, r *http.Re
 	return
 
 }
+func (authE *EndpointServiceUser) availableAppointments(w http.ResponseWriter, r *http.Request) {
+
+	log.Println("[EndpointServiceUser::availableAppointments]")
+
+	appointments, err := authE.world.GetAvailableAppointments()
+
+	if err != nil {
+		log.Printf("[EndpointServiceUser::availableAppointments] getAppointments::Error %s", err)
+
+		status := http.StatusBadRequest
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	responseJSON := &struct {
+		Appointments []*appointment.Appointment
+	}{}
+	responseJSON.Appointments = appointments.AsSlice()
+	log.Printf("[EndpointServiceUser::availableAppointments] appointments %+v", responseJSON.Appointments)
+
+	responseString, err := json.Marshal(responseJSON)
+	if err != nil {
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+	w.Write([]byte(responseString))
+	return
+
+}
 
 type RequestBodyReleaseAppointment struct {
 	Token         auth.Token
 	AppointmentId uuid.UUID
 }
+
+type RequestBodyBookAppointment = RequestBodyReleaseAppointment
 
 func (authE *EndpointServiceUser) releaseAppointment(w http.ResponseWriter, r *http.Request) {
 

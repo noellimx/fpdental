@@ -19,7 +19,7 @@ type Appointments struct {
 
 type Appointment struct {
 	Id          uuid.UUID
-	Description string `json:"description"`
+	Description string
 	mtx         *sync.Mutex
 }
 
@@ -67,11 +67,10 @@ func (aps *Appointments) Remove(id string) (*Appointment, error) {
 	toRemove, exists := aps.m[KeyAppointments(id)]
 
 	if !exists {
-
 		return nil, ErrorAppointmentNotInSet
 	}
 
-	aps.m[KeyAppointments(id)] = nil
+	delete(aps.m, KeyAppointments(id))
 
 	return toRemove, nil
 }
