@@ -83,7 +83,7 @@ func (w *World) loadAppointments() error {
 		}
 
 		if w.PatientsOrReceptionist[apE.Booker] == nil {
-			log.Panicf(":%s", apE.Booker)
+			log.Panicf("[w.loadAppointments] User not found:%s", apE.Booker)
 		}
 
 		w.PatientsOrReceptionist[apE.Booker].Appointments.Add(ap)
@@ -323,4 +323,15 @@ func (w *World) BookAppointment(token *auth.Token, appointmentId uuid.UUID) erro
 		return utils.ErrorTODO
 	}
 	return w.transferFromReceptionist(token.Username, appointmentId.String())
+}
+
+func (w *World) GetUserSessionsAll(token *auth.Token) ([]*auth.UserSessionsBE, error) {
+	log.Println("[world::GetUserSessionsAll]")
+	is := w.Auth.IsAssociatedToken(token)
+
+	if !is {
+		log.Printf("[Error] [::GetUserSessionsAll]")
+		return nil, utils.ErrorTODO
+	}
+	return w.Auth.GetUserSessionsAll(), nil
 }

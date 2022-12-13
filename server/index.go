@@ -38,6 +38,7 @@ func RunServer(opts *ServerOpts) {
 
 	r.Mount("/auth", endpoints.NewEndpointServiceAuthentication(opts.World).Routes())
 	r.Mount("/appointments", endpoints.NewEndpointServiceUser(opts.World).Routes())
+	r.Mount("/admin", endpoints.NewEndpointServiceAdmin(opts.World).Routes())
 
 	log.Printf("%+#v", opts)
 	http.ListenAndServe(opts.Addr, r)

@@ -26,6 +26,11 @@ type UserCredential struct {
 	tokens   map[string]*Token
 }
 
+type UserSessionsBE struct {
+	Username string
+	TokenIds []string
+}
+
 func (u *UserCredential) IsTokenInPossession(token *Token) bool {
 
 	return u.tokens[token.Id] != nil
@@ -48,19 +53,51 @@ func NewUserCredentialClear(username, password string) *UserCredentialClear {
 	return &UserCredentialClear{Username: username, Password: PasswordUnhashed(password)}
 }
 
+type UserCredentials struct {
+	Map map[string]*UserCredential
+}
 type AuthService struct {
-	UserCredentials map[string]*UserCredential
-	AdminUsername   string
+	UserCredentials
+	AdminUsername string
 }
 
+func (ucS UserCredentials) AsUserSessions() []*UserSessionsBE {
+
+	userSessions := []*UserSessionsBE{}
+
+	for username, value := range ucS.Map {
+
+		us := &UserSessionsBE{
+			Username: username,
+		}
+
+		_tokenIds := []string{}
+		for _, token := range value.tokens {
+			_tokenIds = append(_tokenIds, token.Id)
+		}
+
+		us.TokenIds = _tokenIds
+
+		log.Printf("[::AsUserSessions] %v", us)
+
+		userSessions = append(userSessions, us)
+	}
+
+	return userSessions
+}
+func (a *AuthService) GetUserSessionsAll() []*UserSessionsBE {
+
+	return a.UserCredentials.AsUserSessions()
+
+}
 func (a *AuthService) CountCredentials() int {
 
-	return len(a.UserCredentials)
+	return len(a.UserCredentials.Map)
 }
 func (a *AuthService) IsAssociatedToken(token *Token) bool {
 	log.Printf("[IsAssociatedToken] %s", token.Username)
 
-	credential := a.UserCredentials[token.Username]
+	credential := a.UserCredentials.Map[token.Username]
 
 	if credential != nil {
 		return credential.IsTokenInPossession(token)
@@ -73,17 +110,17 @@ func (a *AuthService) IsAssociatedToken(token *Token) bool {
 func (a *AuthService) GetCredentials(name string) *UserCredential {
 	log.Printf("[GetCredentials] %d", a.CountCredentials())
 
-	log.Printf("[GetCredentials] GOT %s -> %v", name, a.UserCredentials[name])
+	log.Printf("[GetCredentials] GOT %s -> %v", name, a.UserCredentials.Map[name])
 
-	return a.UserCredentials[name]
+	return a.UserCredentials.Map[name]
 }
 
 func (a *AuthService) RegisterCredential(uc *UserCredentialClear) error {
 
-	if a.UserCredentials[uc.Username] != nil {
+	if a.UserCredentials.Map[uc.Username] != nil {
 		return ErrorUsernameTaken
 	}
-	a.UserCredentials[uc.Username] = &UserCredential{username: uc.Username, password: hashPassword(uc.Password)}
+	a.UserCredentials.Map[uc.Username] = &UserCredential{username: uc.Username, password: hashPassword(uc.Password)}
 	return nil
 }
 
@@ -124,7 +161,7 @@ func (authS *AuthService) IsAuthUnPw(username string, password PasswordUnhashed)
 
 func (auth *AuthService) GenerateAndAssociateTokenToUser(username string, role Role, expiry string) *Token {
 	token := GenerateToken(username, role, expiry)
-	auth.UserCredentials[token.Username].tokens[token.Id] = token
+	auth.UserCredentials.Map[token.Username].tokens[token.Id] = token
 	return token
 }
 
@@ -168,16 +205,15 @@ func (auth *AuthService) InitCredentials(path string) error {
 		log.Printf("[InitCredentials] %s", c.Username)
 	}
 
-	auth.UserCredentials = credentialsMap
+	auth.UserCredentials.Map = credentialsMap
 
 	return nil
 
 }
 
 func NewAuth() *AuthService {
-
 	a := &AuthService{}
-	a.UserCredentials = make(map[string]*UserCredential)
+	a.UserCredentials.Map = make(map[string]*UserCredential) // TODO: To remove this line and test. Map Initialization should be done at ::InitCredentials
 	a.AdminUsername = ADMIN_USERNAME
 	return a
 }
