@@ -329,7 +329,7 @@ func (w *World) BookAppointment(token *auth.Token, appointmentId uuid.UUID) erro
 
 func (w *World) GetUserSessionsAll(token *auth.Token) ([]*auth.UserSessionsBE, error) {
 	log.Println("[world::GetUserSessionsAll]")
-	is := w.Auth.IsAssociatedToken(token)
+	is := w.Auth.IsAssociatedTokenAdmin(token)
 
 	if !is {
 		log.Printf("[Error] [::GetUserSessionsAll]")
