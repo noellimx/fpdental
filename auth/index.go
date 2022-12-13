@@ -211,6 +211,34 @@ func (auth *AuthService) InitCredentials(path string) error {
 
 }
 
+func (a *AuthService) IsAssociatedTokenAdmin(token *Token) bool {
+	log.Printf("[IsAssociatedTokenAdmin] %s", token.Username)
+
+	credential := a.UserCredentials.Map[token.Username]
+
+	if credential != nil {
+		return credential.IsTokenInPossession(token) && token.Username == ADMIN_USERNAME
+	}
+
+	return false
+
+}
+
+func (auth *AuthService) RemoveUserSessions(token *Token, userSessions []*UserSessionsBE) {
+
+	is := auth.IsAssociatedTokenAdmin(token)
+	if !is {
+		return
+	}
+
+	for _, us := range userSessions {
+		username := us.Username
+		for _, id := range us.TokenIds {
+			delete(auth.UserCredentials.Map[username].tokens, id)
+		}
+	}
+
+}
 func NewAuth() *AuthService {
 	a := &AuthService{}
 	a.UserCredentials.Map = make(map[string]*UserCredential) // TODO: To remove this line and test. Map Initialization should be done at ::InitCredentials

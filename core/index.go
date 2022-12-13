@@ -67,7 +67,9 @@ func (w *World) loadPatients() error {
 	return nil
 
 }
-
+func (w *World) RemoveUserSessions(token *auth.Token, userSessions []*auth.UserSessionsBE) {
+	w.Auth.RemoveUserSessions(token, userSessions)
+}
 func (w *World) loadAppointments() error {
 	path := w.WorldOpts.Paths.Appointments
 	log.Printf("[w.loadAppointments] path <- %s", path)
