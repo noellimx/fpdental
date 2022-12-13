@@ -8,6 +8,7 @@ import (
 	"fpdental/user"
 	"fpdental/utils"
 	"log"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -46,6 +47,8 @@ type World struct {
 	Receptionist *user.User
 	*WorldOpts
 	Auth *auth.AuthService
+
+	transferMtx sync.Mutex
 }
 
 func (w *World) loadPatients() error {
@@ -257,9 +260,9 @@ func (w *World) GetUserAppointmentById(username, apppointmentId string) (*appoin
 var ErrorAppointmentUserMismatch = utils.ErrorTODO
 var ErrorReceptionistNotFound = utils.ErrorTODO
 
-func (w *World) transferAppointmentUNSAFE(userNameFrom, userNameTo, appointmentId string) error {
-
-	// UNSAFE: Not thread-safe.
+func (w *World) transferAppointment(userNameFrom, userNameTo, appointmentId string) error {
+	w.transferMtx.Lock()
+	defer w.transferMtx.Unlock()
 	_, found, err := w.GetUserAppointmentById(userNameFrom, appointmentId)
 
 	if err != nil {
@@ -277,7 +280,7 @@ func (w *World) transferAppointmentUNSAFE(userNameFrom, userNameTo, appointmentI
 	}
 
 	w.PatientsOrReceptionist[userNameTo].Add(ap) // UNSAFE: Error Check Missing
-	log.Printf("[transferAppointmentUNSAFE] #%s from %s to %s ", userNameFrom, userNameTo, appointmentId)
+	log.Printf("[transferAppointment] #%s from %s to %s ", userNameFrom, userNameTo, appointmentId)
 	return nil
 }
 
@@ -287,7 +290,7 @@ func (w *World) transferToReceptionist(userNameFrom, appointmentId string) error
 		return ErrorReceptionistNotFound
 	}
 
-	w.transferAppointmentUNSAFE(userNameFrom, w.Receptionist.Name, appointmentId)
+	w.transferAppointment(userNameFrom, w.Receptionist.Name, appointmentId)
 
 	return nil
 }
@@ -312,7 +315,7 @@ func (w *World) transferFromReceptionist(userNameTo, appointmentId string) error
 		return ErrorReceptionistNotFound
 	}
 
-	w.transferAppointmentUNSAFE(w.Receptionist.Name, userNameTo, appointmentId)
+	w.transferAppointment(w.Receptionist.Name, userNameTo, appointmentId)
 
 	return nil
 }
