@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -35,6 +36,13 @@ func RunServer(opts *ServerOpts) {
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
+
+	staticPath, _ := filepath.Abs("./dist")
+
+	log.Printf("staticPath %s", staticPath)
+	fs := http.FileServer(http.Dir(staticPath))
+
+	r.Handle("/*", http.StripPrefix("/", fs))
 
 	r.Mount("/auth", endpoints.NewEndpointServiceAuthentication(opts.World).Routes())
 	r.Mount("/appointments", endpoints.NewEndpointServiceUser(opts.World).Routes())
